@@ -11,9 +11,8 @@ const fetchMyIP = function(callback) {
       callback(Error(msg), null);
       return;
     }
-    console.log(JSON.parse(body));
-    const data = JSON.parse(body).ip;
-    callback(null,data);
+    const ip = JSON.parse(body).ip;
+    callback(null,ip);
   });
 };
 
@@ -29,17 +28,56 @@ const fetchCoordsByIP = function(IP,callback) {
    
     const latitude = JSON.parse(body).data.latitude;
     const longitude = JSON.parse(body).data.longitude;
-    const data = {
+    const coordsData = {
       latitude,
       longitude
     };
-    callback(null,data);
+    callback(null,coordsData);
     
   });
 };
 
+const fetchISSFlyOverTimes = function(coords,callback) {
+  request(`http://api.open-notify.org/iss-pass.json?lat=${coords.latitude}&lon=${coords.longitude}`, (error,response,body) => {
+    if (error) {
+      return callback(error, null);
+    }
+    if (response.statusCode !== 200) {
+      return callback(Error(`Status code ${response.statusCode} when fetching ISS flyover times. Response: ${body}`));
+    }
+    const flyTimesData = JSON.parse(body).response;
+    callback(null,flyTimesData);
+  });
+ 
+};
+
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error,ip) => {
+    if (error) {
+      return callback(error, null);
+    } else {
+      fetchCoordsByIP(ip,(error,coords) => {
+        if (error) {
+          return callback(error, null);
+        } else {
+          fetchISSFlyOverTimes(coords,(error, flytimes) => {
+            if (error) {
+              return callback(error, null);
+            } else {
+              callback(null, flytimes);
+            }
+
+          });
+        }
+      });
+    }
+
+  });
+};
 
 module.exports = {
   fetchMyIP,
-  fetchCoordsByIP
+  fetchCoordsByIP,
+  fetchISSFlyOverTimes,
+  nextISSTimesForMyLocation
 };
