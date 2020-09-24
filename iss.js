@@ -18,7 +18,7 @@ const fetchMyIP = function(callback) {
 
 // Function to get geo coordinates by submitting IP
 const fetchCoordsByIP = function(IP,callback) {
-  request(`https://ipvigilante.com/${IP}`, (error,response,body) => {
+  request(`https://ipvigilante.com/json/${IP}`, (error,response,body) => {
     if (error) {
       return callback(error,null);
     }
